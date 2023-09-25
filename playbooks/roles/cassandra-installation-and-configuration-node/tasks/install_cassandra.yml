@@ -53,7 +53,7 @@
 
   - name: Download CassandraDB archive
     get_url:
-      url: "https://artifactory.emias.mos.ru/artifactory/app/cassandra_img/apache-cassandra-{{ CASSANDRA_VERSION }}.tar.gz"
+      url: "https://artifactory.test.test.ru/artifactory/app/cassandra_img/apache-cassandra-{{ CASSANDRA_VERSION }}.tar.gz"
       dest: "/opt/cassandra/"
       url_username: "{{ ARTIFACTORY_USER }}" 
       url_password: "{{ ARTIFACTORY_PASS }}"
