@@ -1,0 +1,44 @@
+  - name: Include vars
+    include_vars: cassandra_config.yml
+
+  - name: Create cassandra exporter directory if they don't exist
+    file:
+      path: "{{ item }}"
+      state: directory
+      owner: cassandra
+      group: cassandra
+      mode: '0775'
+    loop:
+      - /opt/cassandra/cassandra-exporter-agent
+    become: yes
+
+  - name: Download CassandraDB archive
+    get_url:
+      url: "https://artifactory.emias.mos.ru/artifactory/app/cassandra_img/cassandra_exporter/cassandra-exporter-standalone-0.9.12-SNAPSHOT.jar"
+      dest: "/opt/cassandra/cassandra-exporter-agent/"
+      url_username: "{{ ARTIFACTORY_USER }}" 
+      url_password: "{{ ARTIFACTORY_PASS }}"
+      validate_certs: no
+
+  - name: Copy cassandra exporter systemd service
+    template:
+      src: cassandra_exporter.service.j2
+      dest: /etc/systemd/system/cassandra_exporter.service
+      owner: root
+      group: root
+      mode: 0755
+
+  - name: Recursively change ownership of a directory
+    ansible.builtin.file:
+      path: /opt/cassandra
+      state: directory
+      recurse: yes
+      owner: cassandra
+      group: cassandra
+
+  - name: Run cassandra exporter systemd service
+    systemd:
+      name: cassandra_exporter.service
+      state: started
+      enabled: yes
+      daemon_reload: true

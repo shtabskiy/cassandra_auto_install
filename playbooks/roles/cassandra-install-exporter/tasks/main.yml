@@ -1,0 +1,3 @@
+---
+- name: cassandra-install-exporter.yml
+  include_tasks: cassandra-install-exporter.yml

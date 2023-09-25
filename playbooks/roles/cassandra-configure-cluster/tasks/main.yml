@@ -1,0 +1,3 @@
+---
+- name:  install_cassandra_cluster.yml
+  include_tasks:  install_cassandra_cluster.yml

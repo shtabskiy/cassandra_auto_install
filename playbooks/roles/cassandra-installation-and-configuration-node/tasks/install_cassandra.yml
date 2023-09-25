@@ -1,0 +1,130 @@
+#---
+#- hosts: cassandra_hosts
+#  become: yes
+  
+#  tasks:
+  - name: Include vars
+    include_vars: cassandra_config.yml
+
+  - name: Check cassandra home directory
+    stat: path=/opt/cassandra
+    register: cassandra_home_path
+
+  - name: Fail if dir already exits
+    fail: msg="This host has cassandra directory"
+    when: cassandra_home_path.stat.exists
+
+  - name: Install the package openjdk-11-jdk
+    ansible.builtin.zypper:
+      name: java-1_8_0-openjdk
+      state: latest
+
+  - name: Create group cassandra
+    group:
+      name: cassandra
+      state: present
+
+  - name: Create user cassandra
+    user:
+      name: cassandra
+      password: 'cassandra'
+      groups: cassandra
+      state: present
+      shell: /bin/bash
+      createhome: yes
+      home: /opt/cassandra
+    become: yes       
+
+  - name: Create Cassandra directory if they don't exist
+    file:
+      path: "{{ item }}"
+      state: directory
+      owner: cassandra
+      group: cassandra
+      mode: '0775'
+    loop:
+      - /{{ DATA_DIR }}/cassandra/apache-cassandra-{{ CASSANDRA_VERSION }}/data
+      - /{{ DATA_DIR }}/cassandra/apache-cassandra-{{ CASSANDRA_VERSION }}/data/hints
+      - /{{ DATA_DIR }}/cassandra/apache-cassandra-{{ CASSANDRA_VERSION }}/commitlog
+      - /{{ DATA_DIR }}/cassandra/apache-cassandra-{{ CASSANDRA_VERSION }}/cdc_raw
+      - /{{ DATA_DIR }}/cassandra/apache-cassandra-{{ CASSANDRA_VERSION }}/saved_caches
+      - /{{ DATA_DIR }}/cassandra/apache-cassandra-{{ CASSANDRA_VERSION }}/logs
+    become: yes
+
+  - name: Download CassandraDB archive
+    get_url:
+      url: "https://artifactory.emias.mos.ru/artifactory/app/cassandra_img/apache-cassandra-{{ CASSANDRA_VERSION }}.tar.gz"
+      dest: "/opt/cassandra/"
+      url_username: "{{ ARTIFACTORY_USER }}" 
+      url_password: "{{ ARTIFACTORY_PASS }}"
+      validate_certs: no
+
+  - name: Extract CassandraDB archive into /opt/cassandra
+    ansible.builtin.unarchive:
+      src: /opt/cassandra/apache-cassandra-{{ CASSANDRA_VERSION }}.tar.gz
+      dest: /opt/cassandra/
+      remote_src: yes
+
+  - name: Recursively change ownership of a directory
+    ansible.builtin.file:
+      path: /opt/cassandra
+      state: directory
+      recurse: yes
+      owner: cassandra
+      group: cassandra
+
+  - name: Copy limits
+    copy:
+      src: limits.conf
+      dest: /etc/security/limits.conf
+
+  - name: Copy sysctl
+    copy:
+      src: sysctl.conf
+      dest: /etc/sysctl.conf
+
+  - name: Reload sysctl.conf
+    shell: sysctl -p
+
+  - name: Copy main cassandra config
+    template:
+      src: templates/{{ CASSANDRA_VERSION }}/cassandra.yaml.j2
+      dest: /opt/cassandra/apache-cassandra-{{ CASSANDRA_VERSION }}/conf/cassandra.yaml
+      owner: cassandra
+      group: cassandra
+      mode: 0755
+
+  - name: Copy cassandra-env config
+    template:
+      src: templates/{{ CASSANDRA_VERSION }}/cassandra-env.sh.j2
+      dest: /opt/cassandra/apache-cassandra-{{ CASSANDRA_VERSION }}/conf/cassandra-env.sh
+      owner: cassandra
+      group: cassandra
+      mode: 0755
+
+  - name: Copy cassandra .bashrc config
+    template:
+      src: .bashrc.j2
+      dest: /opt/cassandra/.bashrc
+      owner: cassandra
+      group: cassandra
+      mode: 0755
+
+  - name: Copy cassandra systemd service
+    template:
+      src: cassandra.service.j2
+      dest: /etc/systemd/system/cassandra-{{ CASSANDRA_VERSION }}.service
+      owner: root
+      group: root
+      mode: 0755
+
+  - name: Run cassandra systemd service
+    systemd:
+      name: cassandra-{{ CASSANDRA_VERSION }}.service
+      state: started
+      enabled: yes
+      daemon_reload: true
+
+
+
+

@@ -1,0 +1,13 @@
+[Unit]
+Description=Manage cassandra exporter service
+ 
+[Service]
+WorkingDirectory=/opt/cassandra/cassandra-exporter-agent
+ExecStart=/usr/bin/java -jar cassandra-exporter-standalone-0.9.12-SNAPSHOT.jar --cql-address={{ NODE_IP }} --cql-password=cassandra --cql-user=cassandra
+User=cassandra
+Type=simple
+Restart=on-failure
+RestartSec=10
+ 
+[Install]
+WantedBy=multi-user.target
