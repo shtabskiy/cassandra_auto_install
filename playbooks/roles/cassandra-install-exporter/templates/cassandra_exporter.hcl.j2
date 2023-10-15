@@ -1,0 +1,16 @@
+{
+  "service": {
+    "name": "cassandra_exporter",
+    "tags": [
+      "cas",
+      "prod"
+    ],
+    "port": 9500,
+    "check": {
+      "http": "http://{{ NODE_IP }}:9500/metrics",
+      "method": "GET",
+      "interval": "15s",
+      "timeout": "10s"
+    }
+  }
+}

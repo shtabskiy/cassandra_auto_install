@@ -12,9 +12,9 @@
       - /opt/cassandra/cassandra-exporter-agent
     become: yes
 
-  - name: Download CassandraDB archive
+  - name: Download Cassandra exporter archive
     get_url:
-      url: "https://artifactory.test.test.ru/artifactory/app/cassandra_img/cassandra_exporter/cassandra-exporter-standalone-0.9.12-SNAPSHOT.jar"
+      url: "https://artifactory.emias.mos.ru/artifactory/app/cassandra_img/cassandra_exporter/cassandra-exporter-standalone-0.9.12-SNAPSHOT.jar"
       dest: "/opt/cassandra/cassandra-exporter-agent/"
       url_username: "{{ ARTIFACTORY_USER }}" 
       url_password: "{{ ARTIFACTORY_PASS }}"
@@ -30,7 +30,7 @@
 
   - name: Recursively change ownership of a directory
     ansible.builtin.file:
-      path: /opt/cassandra
+      path: /opt/cassandra/cassandra-exporter-agent
       state: directory
       recurse: yes
       owner: cassandra
@@ -42,3 +42,17 @@
       state: started
       enabled: yes
       daemon_reload: true
+
+  - name: Copy consul cassandra hcl file
+    template:
+      src: cassandra_exporter.hcl.j2
+      dest: /etc/consul/cassandra_exporter.hcl
+      owner: root
+      group: root
+      mode: 0755
+
+  - name: Restart consul service
+    systemd:
+      state: restarted
+      daemon_reload: yes
+      name: consul
