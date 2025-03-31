@@ -10,9 +10,9 @@
     stat: path=/opt/cassandra
     register: cassandra_home_path
 
-  # - name: Fail if dir already exits
-  #   fail: msg="This host has cassandra directory"
-  #   when: cassandra_home_path.stat.exists
+  - name: Fail if dir already exits
+    fail: msg="This host has cassandra directory"
+    when: cassandra_home_path.stat.exists
 
   - name: Install the package openjdk-11-jdk
     ansible.builtin.zypper:
