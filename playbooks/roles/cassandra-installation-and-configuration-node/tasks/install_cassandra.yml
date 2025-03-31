@@ -10,9 +10,9 @@
     stat: path=/opt/cassandra
     register: cassandra_home_path
 
-  - name: Fail if dir already exits
-    fail: msg="This host has cassandra directory"
-    when: cassandra_home_path.stat.exists
+  # - name: Fail if dir already exits
+  #   fail: msg="This host has cassandra directory"
+  #   when: cassandra_home_path.stat.exists
 
   - name: Install the package openjdk-11-jdk
     ansible.builtin.zypper:
@@ -53,7 +53,7 @@
 
   - name: Download CassandraDB archive
     get_url:
-      url: "https://artifactory.emias.mos.ru/artifactory/app/cassandra_img/apache-cassandra-{{ CASSANDRA_VERSION }}.tar.gz"
+      url: "https://artifactory.какой-то-домен.ru/artifactory/app/cassandra_img/apache-cassandra-{{ CASSANDRA_VERSION }}.tar.gz"
       dest: "/opt/cassandra/"
       url_username: "{{ ARTIFACTORY_USER }}" 
       url_password: "{{ ARTIFACTORY_PASS }}"
@@ -102,6 +102,15 @@
       group: cassandra
       mode: 0755
 
+  - name: Copy cassandra-rackdc.properties config
+    template:
+      src: templates/{{ CASSANDRA_VERSION }}/cassandra-rackdc.properties.j2
+      dest: /opt/cassandra/apache-cassandra-{{ CASSANDRA_VERSION }}/conf/cassandra-rackdc.properties
+      owner: cassandra
+      group: cassandra
+      mode: 0755
+      force: yes
+
   - name: Copy cassandra .bashrc config
     template:
       src: .bashrc.j2
@@ -117,6 +126,13 @@
       owner: root
       group: root
       mode: 0755
+
+  - name: Create cassandra systemd service symlink
+    file:
+      src: /etc/systemd/system/cassandra-{{ CASSANDRA_VERSION }}.service
+      dest: /etc/systemd/system/cassandra.service
+      state: link
+      force: yes
 
   - name: Run cassandra systemd service
     systemd:

@@ -1,0 +1,6 @@
+---
+- hosts: all
+  become: yes
+  serial: 1
+  roles:
+    - { role: cassandra-restart-nodes, when: ansible_system == 'Linux' }

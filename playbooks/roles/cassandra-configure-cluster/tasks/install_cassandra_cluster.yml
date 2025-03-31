@@ -14,13 +14,13 @@
       backup: yes
       state: present
 
-  - name: Copy cassandra rackdc properties config
-    template:
-      src: cassandra-rackdc.properties.j2
-      dest: /opt/cassandra/apache-cassandra-{{ CASSANDRA_VERSION }}/conf/cassandra-rackdc.properties
-      owner: cassandra
-      group: cassandra
-      mode: 0755
+#  - name: Copy cassandra rackdc properties config
+#    template:
+#      src: cassandra-rackdc.properties.j2
+#      dest: /opt/cassandra/apache-cassandra-{{ CASSANDRA_VERSION }}/conf/cassandra-rackdc.properties
+#      owner: cassandra
+#      group: cassandra
+#      mode: 0755
 
   - name: Restart cassandra systemd service
     systemd:

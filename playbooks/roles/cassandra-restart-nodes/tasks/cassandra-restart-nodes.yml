@@ -1,0 +1,24 @@
+  - name: Drain Cassandra node before stopping (run as cassandra user)
+    ansible.builtin.shell: sudo -u cassandra bash -c "source /opt/cassandra/.bashrc && /opt/cassandra/apache-cassandra-*/bin/nodetool drain"
+    become: yes
+
+  - name: Include vars
+    include_vars: cassandra_config.yml
+
+  - name: Stop Cassandra service
+    ansible.builtin.service:
+      name: cassandra
+      state: stopped
+
+  - name: Start Cassandra service
+    ansible.builtin.service:
+      name: cassandra
+      state: started
+
+  - name: Wait for Cassandra to become healthy
+    ansible.builtin.wait_for:
+      host: "{{ inventory_hostname }}"
+      port: 9042
+      delay: 5
+      timeout: 300
+
